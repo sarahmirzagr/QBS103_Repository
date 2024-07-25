@@ -6,6 +6,7 @@ date: "2024-07-25"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+setwd('/Users/sarahmirza/Desktop/QBS103/')
 ```
 
 ## R Markdown
@@ -16,6 +17,8 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r cars}
 summary(cars)
+# new changes made 
+# new comment
 ```
 
 ## Including Plots
