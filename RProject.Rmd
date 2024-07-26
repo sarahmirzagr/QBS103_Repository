@@ -18,18 +18,28 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r}
 # READ IN CSV FILES
 
-filenames <- list.files(path = "/Users/sarahmirza/Documents/GitHub/QBS103_Repository/", pattern = ".csv")
-#print(filenames)
+setwd("/Users/sarahmirza/Documents/GitHub/QBS103_Repository/") # set the working directory
+genes.df <- read.csv(file = "QBS103_GSE157103_genes.csv") 
+head(genes.df) # see if it worked
 
-for (file in filenames){
-  the_file <- read.csv(file)
-  print(head(the_file))
-}
+
+matrix.df <- read.csv(file="QBS103_GSE157103_series_matrix.csv")
+head(matrix.df)
+
+```
+```{r}
+# GENES DATA FRAME - transpose
+genes.df <- as.data.frame(t(genes.df))
+names(genes.df) <- genes.df[1,]
+genes.df <- genes.df[-1,]
 ```
 
-## Including Plots
+```{r}
+genes.df$participant_id <- row.names(genes.df)
+merged_matrix <- merge(genes.df,matrix.df,by = "participant_id")
+head(merged_matrix)
+```
 
-You can also embed plots, for example:
 
 ```{r}
 library(ggplot2)
