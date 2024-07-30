@@ -43,6 +43,8 @@ head(merged_matrix) # see if it worked
 # Load required package
 library(ggplot2)
 
+# Convert AAMP to numeric to read into histogram easier
+merged_matrix$AAMP <- as.numeric(merged_matrix$AAMP)
 
 # Create histogram using the new data frame, the gene chosen was AAMP
 histo <- ggplot(merged_matrix, aes(x = AAMP)) +
