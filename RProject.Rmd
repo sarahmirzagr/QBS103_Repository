@@ -20,25 +20,41 @@ When you click the **Knit** button a document will be generated that includes bo
 
 setwd("/Users/sarahmirza/Documents/GitHub/QBS103_Repository/") # set the working directory
 genes.df <- read.csv(file = "QBS103_GSE157103_genes.csv") 
-head(genes.df) # see if it worked
+#head(genes.df) # see if it worked
 
 
 matrix.df <- read.csv(file="QBS103_GSE157103_series_matrix.csv")
-head(matrix.df)
+#head(matrix.df)
 
 ```
+
+
 ```{r}
 # GENES DATA FRAME - transpose
-genes.df <- as.data.frame(t(genes.df)) # transpose, convert rows to columns and columns to rows
+
+# remove column names and rows before transposing then add them back
+genes_transpose <-t(genes.df)
+genes.df <- as.data.frame(genes_transpose) # transpose, convert rows to columns and columns to rows
 names(genes.df) <- genes.df[1,] #set the first row in the data frame and set it to the column names for the data frame
 genes.df <- genes.df[-1,] # remove the first row in the data frame so that the names are no longer a row
+
+
+# FROM TUTORIALSPOINT - the [] maintains the data frame as a data frame and the lapply works on the columns, so every column
+# has been converted to a numeric because transpose makes them character
+genes.df[] <- lapply(genes.df, function(x) as.numeric(as.character(x)))
+
+genes.df <- na.omit(genes.df) # get rid of NA
+
+
 ```
 
 ```{r}
 genes.df$participant_id <- row.names(genes.df) # make new row called participant_id and with the gene.df row names
 merged_matrix <- merge(genes.df,matrix.df,by = "participant_id") # merge the two data frames using participant_id as the key for merging and save it to merged_matrix, which is actually a data frame
-head(merged_matrix) # see if it worked
+#head(merged_matrix) # see if it worked
 ```
+
+
 ```{r}
 # Load required package
 library(ggplot2)
@@ -46,9 +62,9 @@ library(ggplot2)
 # Convert AAMP to numeric to read into histogram easier
 merged_matrix$AAMP <- as.numeric(merged_matrix$AAMP)
 
-# Create histogram using the new data frame, the gene chosen was AAMP
+# Create histogram using the new data frame, the gene chosen was AAMP - changed binwidth per suggestion
 histo <- ggplot(merged_matrix, aes(x = AAMP)) +
-  geom_histogram(binwidth = 1, fill = "darkseagreen4", color = "black") +
+  geom_histogram(binwidth = 5, fill = "darkseagreen4", color = "black") +
   labs(title = "AAMP Gene Expression",
        x = "AAMP Gene Expression",
        y = "Frequency") 
@@ -74,6 +90,8 @@ scatter <- ggplot(merged_matrix, aes(x = age, y = AAMP,color = age)) + # color =
        x = "Age",
        y = "AAMP Expression") 
 plot(scatter)
+
+# geom_smooth for best fit line
 
 # Save the plot to a file
 ggsave("AAMP_gene_expression_vs_age.pdf", plot = scatter, width = 8, height = 5)
@@ -114,4 +132,54 @@ ggplot(merged_matrix, aes(x = icu_status, y = AAMP, fill = sex)) +
 #       y = "AAMP Expression",
 #       fill = "source_name_ch1") 
 ```
+```{r}
+library(harrypotter)
+
+
+fun_stats_pretty_plots <- function(matrix,gene_name,continuous_name,categorical1_name,categorical2_name){
+ # print(matrix)
+    matrix$gene <- matrix[,gene_name] # dummy variable that creates a new column with the name of the gene I want and all its values
+    # this is used for plotting, and the function is fed a string that I use for labeling which is the name of the original column
+    #matrix$gene <- as.numeric(matrix$gene)
+    matrix$continuous <- matrix[,continuous_name]
+    matrix$categorical1 <- matrix[,categorical1_name]
+    matrix$categorical2 <- matrix[,categorical2_name]
+    
+    histogram <- ggplot(matrix, aes(x=gene)) + geom_histogram(bins = 20, fill = "darkseagreen4", color = "black") +
+    labs(title = paste0(gene_name," Gene Expression"),
+       x = paste0(gene_name," Gene Expression"),
+       y = "Frequency") 
+    
+    scatterplot <- ggplot(matrix, aes(x=continuous, y=gene, color = continuous)) +
+    geom_point() + scale_color_gradient(low = "blue", high = "red",name = (paste0(continuous_name))) + 
+    labs(title = paste0(gene_name," Expression vs. ",continuous_name),
+       x = paste0(continuous_name),
+       y = paste0(gene_name," Expression"))
+    
+       
+    boxplot <- ggplot(matrix, aes(x=categorical1, y=gene, fill = categorical2)) +
+    geom_boxplot() + scale_fill_hp_d(option = "lunalovegood") + 
+    labs (title = paste0(gene_name," Expression by ",categorical1_name, "and ",categorical2_name),
+       x = paste0(categorical1_name),
+       y = paste0(gene_name," Expression"),
+       fill = paste0(categorical2_name))
+
+    plot(histogram)
+    plot(scatterplot)
+    plot(boxplot)
+}
+
+
+# gene 1
+fun_stats_pretty_plots(matrix = merged_matrix,gene_name='AAMP',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
+
+
+# gene 2
+fun_stats_pretty_plots(matrix = merged_matrix,gene_name='AAAS',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
+
+
+# gene 3
+fun_stats_pretty_plots(matrix = merged_matrix,gene_name='ABHD14A-ACY1',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
+```
+
 
