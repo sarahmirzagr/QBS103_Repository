@@ -145,7 +145,7 @@ fun_stats_pretty_plots <- function(matrix,gene_name,continuous_name,categorical1
     matrix$categorical1 <- matrix[,categorical1_name]
     matrix$categorical2 <- matrix[,categorical2_name]
     
-    histogram <- ggplot(matrix, aes(x=gene)) + geom_histogram(bins = 20, fill = "chartreuse2", color = "black") +
+    histogram <- ggplot(matrix, aes(x=gene)) + geom_histogram(bins = 20, fill = "darkseagreen", color = "black") +
     labs(title = paste0(gene_name," Gene Expression"),
        x = paste0(gene_name," Gene Expression"),
        y = "Frequency") 
@@ -188,5 +188,111 @@ for (g in plot_genes) {
 # gene 3
 #fun_stats_pretty_plots(matrix = merged_matrix,gene_name='ABHD14A-ACY1',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
 ```
+```{r}
+# calculate mean 
+calcMean <- function(data) {
+  sumVal <- calcSum(data) # use the sum function created earlier
+  len <- length(data) # total
+  for (i in 1:length(data)) {
+    if(is.na(data[i])) {
+      len <- len - 1 # na entries should be removed from total
+    }
+  }
+  mean <- sumVal / len # sum / total
+  return(mean) # return mean
+}
 
+
+
+```
+
+
+Generate a table formatted in LaTeX of summary statistics for all the covariates you looked at and 2 additional continuous (3 total) and 1 additional categorical variable (3 total). (5 pts)
+
+    Stratifying by one of your categorical variables
+    Tables should report n (%) for categorical variables
+    Tables should report mean (sd) or median [IQR] for continuous variables
+
+```{r}
+library(tidyverse)
+library(knitr) # for base kable function
+#install.packages('tableone')
+library(tableone)
+
+merged_matrix$age <- as.numeric(merged_matrix$age)
+merged_matrix$hospital.free_days_post_45_day_followup <- as.numeric(merged_matrix$hospital.free_days_post_45_day_followup)
+merged_matrix$ventilator.free_days <- as.numeric(merged_matrix$ventilator.free_days)
+
+vars <- c("icu_status","mechanical_ventilation","age","hospital.free_days_post_45_day_followup","ventilator.free_days")
+
+## Create Table 1 stratified by sex
+tableOne <- CreateTableOne(vars = vars, strata ="sex", data = merged_matrix)
+
+finished_table <- print(tableOne,showAllLevels = T,
+                        nonnormal=c("hospital.free_days_post_45_day_followup","ventilator.free_days"))
+write.csv(finished_table,"tableOne.csv")
+
+```
+Generate final a publication quality  histogram, scatter plot, and boxplot from submission 1 (i.e. only for your first gene of interest)  (5 pts)
+```{r}
+# genes to be used during plotting - stored in a list 
+plot_gene_final = c("AAMP")
+
+# for loop - replace gene name with gene in list
+for (g in plot_gene_final) {
+  fun_stats_pretty_plots(matrix = merged_matrix,gene_name=g,continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
+}
+```
+Generate a heatmap (5 pts)
+
+    Heatmap should include at least 10 genes
+    Include tracking bars for the 2 categorical covariates in your boxplot
+    Heatmaps should include clustered rows and columns
+```{r}
+
+merged_matrix$AAMP <- as.numeric(merged_matrix$AAMP) # 1 - my gene
+merged_matrix$ABCC5 <- as.numeric(merged_matrix$ABCC5) # 2
+merged_matrix$AAAS <- as.numeric(merged_matrix$AAAS) # 3
+merged_matrix$ABCA7 <- as.numeric(merged_matrix$ABCA7) # 4
+merged_matrix$ABCA1 <- as.numeric(merged_matrix$ABCA1) # 5
+merged_matrix$ABHD12 <- as.numeric(merged_matrix$ABHD12) # 6
+merged_matrix$AASDHPPT <- as.numeric(merged_matrix$AASDHPPT) # 7
+merged_matrix$AAR2 <- as.numeric(merged_matrix$AAR2) # 8
+merged_matrix$ABHD16A <- as.numeric(merged_matrix$ABHD16A) # 9
+merged_matrix$AARSD1 <- as.numeric(merged_matrix$AARSD1) # 10
+
+heatmap_genes <- c('AAMP','ABCC5','AAAS','ABCA7','ABCA1','ABHD12','AASDHPPT','AAR2','ABHD16A','AARSD1')
+
+
+annotation <- data.frame(ICU_Status = merged_matrix$icu_status,Sex = merged_matrix$sex, row.names = row.names(merged_matrix))
+
+
+# Ensure the row names of annotation match the sample names (columns in the matrix subset)
+row.names(annotation) <- row.names(merged_matrix)
+row.names(merged_matrix) <- row.names(merged_matrix)
+
+#install.packages('pheatmap')
+library(pheatmap)
+# Generate heatmap without clustering
+
+annotationColors <- list(ICU_Status = c(' yes' = 'lightpink1',' no' = 'cornflowerblue'),
+                         Sex =c(' male' = 'midnightblue',' female' = 'mediumvioletred',' unknown'='purple4' ))
+
+pheatmap(merged_matrix[,heatmap_genes],
+show_rownames = F,
+cluster_rows = T,
+cluster_cols = T,
+color = colorRampPalette(c("blue", "white", "red"))(100),
+annotation_row = annotation,
+annotation_colors = annotationColors)
+```
+
+Going through the documentation for ggplot2, generate a plot type that we did not previously discuss in class that describes your data in a new and unique way (5 pts) 
+
+```{r}
+library(ggpubr)
+
+ggballoonplot(merged_matrix[,heatmap_genes], fill = "value")+
+  scale_fill_viridis_c(option = "C")
+```
 
