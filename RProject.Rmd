@@ -94,7 +94,7 @@ plot(scatter)
 # geom_smooth for best fit line
 
 # Save the plot to a file
-ggsave("AAMP_gene_expression_vs_age.pdf", plot = scatter, width = 8, height = 5)
+#ggsave("AAMP_gene_expression_vs_age.pdf", plot = scatter, width = 8, height = 5)
 
 ```
 
@@ -236,12 +236,44 @@ write.csv(finished_table,"tableOne.csv")
 Generate final a publication quality  histogram, scatter plot, and boxplot from submission 1 (i.e. only for your first gene of interest)  (5 pts)
 ```{r}
 # genes to be used during plotting - stored in a list 
-plot_gene_final = c("AAMP")
 
-# for loop - replace gene name with gene in list
-for (g in plot_gene_final) {
-  fun_stats_pretty_plots(matrix = merged_matrix,gene_name=g,continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
-}
+# Load required package
+library(ggplot2)
+
+# Convert AAMP to numeric to read into histogram easier
+merged_matrix$AAMP <- as.numeric(merged_matrix$AAMP)
+
+# Create histogram using the new data frame, the gene chosen was AAMP - changed binwidth per suggestion
+paper_histo <- ggplot(merged_matrix, aes(x = AAMP)) +
+  geom_histogram(binwidth = 5, fill = "darkseagreen4", color = "black") +
+  labs(title = "AAMP Gene Expression",
+       x = "AAMP Gene Expression",
+       y = "Frequency") 
+plot(paper_histo)
+ggsave("AAMP_gene_expression_histogram.pdf", plot = paper_histo, width = 8, height = 5)
+
+
+# Create scatterplot of AAMP expression vs. age
+paper_scatter <- ggplot(merged_matrix, aes(x = age, y = AAMP,color = age)) + # color = age gives the color bar
+  geom_point() +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "AAMP Expression vs. Age",
+       x = "Age",
+       y = "AAMP Expression") 
+plot(paper_scatter)
+ggsave("AAMP_gene_expression_vs_age_scatterplot.pdf", plot = paper_scatter, width = 8, height = 5)
+
+
+#a boxplot of AAMP expression separated by sex and ICU Status
+paper_box <- ggplot(merged_matrix, aes(x = icu_status, y = AAMP, fill = sex)) +
+  geom_boxplot() +
+  labs(title = "AAMP Expression by ICU Status and Sex",
+       x = "ICU Status",
+       y = "AAMP Expression",
+       fill = "sex") + scale_fill_hp_d(option = "lunalovegood")
+plot(paper_box)
+ggsave("AAMP_gene_expression_vs_icu_sex_boxplot.pdf", plot = paper_box, width = 8, height = 5)
+
 ```
 Generate a heatmap (5 pts)
 
@@ -251,48 +283,70 @@ Generate a heatmap (5 pts)
 ```{r}
 
 merged_matrix$AAMP <- as.numeric(merged_matrix$AAMP) # 1 - my gene
-merged_matrix$ABCC5 <- as.numeric(merged_matrix$ABCC5) # 2
+merged_matrix$AAMDC <- as.numeric(merged_matrix$AAMDC) # 2
 merged_matrix$AAAS <- as.numeric(merged_matrix$AAAS) # 3
-merged_matrix$ABCA7 <- as.numeric(merged_matrix$ABCA7) # 4
-merged_matrix$ABCA1 <- as.numeric(merged_matrix$ABCA1) # 5
-merged_matrix$ABHD12 <- as.numeric(merged_matrix$ABHD12) # 6
-merged_matrix$AASDHPPT <- as.numeric(merged_matrix$AASDHPPT) # 7
-merged_matrix$AAR2 <- as.numeric(merged_matrix$AAR2) # 8
-merged_matrix$ABHD16A <- as.numeric(merged_matrix$ABHD16A) # 9
-merged_matrix$AARSD1 <- as.numeric(merged_matrix$AARSD1) # 10
+merged_matrix$AARS1 <- as.numeric(merged_matrix$AARS1) # 4
+merged_matrix$AAGAB <- as.numeric(merged_matrix$AAGAB) # 5
+merged_matrix$ABCA7 <- as.numeric(merged_matrix$ABCA7) # 6
+merged_matrix$ABHD14B <- as.numeric(merged_matrix$ABHD14B) # 7
+merged_matrix$ABHD4 <- as.numeric(merged_matrix$ABHD4) # 8
+merged_matrix$AATF <- as.numeric(merged_matrix$AATF) # 9
+merged_matrix$ABHD17A <- as.numeric(merged_matrix$ABHD17A) # 10
 
-heatmap_genes <- c('AAMP','ABCC5','AAAS','ABCA7','ABCA1','ABHD12','AASDHPPT','AAR2','ABHD16A','AARSD1')
+# genes for heatmap (& balloon plot)
+heatmap_genes <- c('AAMP','AAMDC','AAAS','AARS1','AAGAB','ABCA7','ABHD14B','ABHD4','AATF','ABHD17A')
+
+# new data frame for annotating
+annotation <- data.frame(ICU_Status = merged_matrix$icu_status,
+                         Sex = merged_matrix$sex, 
+                         row.names = row.names(merged_matrix))
 
 
-annotation <- data.frame(ICU_Status = merged_matrix$icu_status,Sex = merged_matrix$sex, row.names = row.names(merged_matrix))
-
-
-# Ensure the row names of annotation match the sample names (columns in the matrix subset)
+# row names of annotation match the merged matrix row names
 row.names(annotation) <- row.names(merged_matrix)
 row.names(merged_matrix) <- row.names(merged_matrix)
 
 #install.packages('pheatmap')
 library(pheatmap)
-# Generate heatmap without clustering
+
 
 annotationColors <- list(ICU_Status = c(' yes' = 'lightpink1',' no' = 'cornflowerblue'),
                          Sex =c(' male' = 'midnightblue',' female' = 'mediumvioletred',' unknown'='purple4' ))
 
 pheatmap(merged_matrix[,heatmap_genes],
-show_rownames = F,
-cluster_rows = T,
-cluster_cols = T,
-color = colorRampPalette(c("blue", "white", "red"))(100),
-annotation_row = annotation,
-annotation_colors = annotationColors)
+  show_rownames = F,
+  cluster_rows = T,
+  cluster_cols = T,
+  color = colorRampPalette(c("blue", "white", "red"))(100),
+  annotation_row = annotation,
+  annotation_colors = annotationColors,
+  filename = 'heatmap.pdf' )
+
+
+
 ```
 
 Going through the documentation for ggplot2, generate a plot type that we did not previously discuss in class that describes your data in a new and unique way (5 pts) 
 
 ```{r}
 library(ggpubr)
+#install.packages("viridis")
+library(viridis)
 
-ggballoonplot(merged_matrix[,heatmap_genes], fill = "value")+
-  scale_fill_viridis_c(option = "C")
+#balloon_genes <- c("AAMP","AAAS")
+
+fifties_df <- subset(merged_matrix, age >= 50 & age <= 59 & icu_status == " no") # subset by participants aged 50-59
+#that have not been to the icu
+
+#head(fifties_df)
+
+balloon <- ggballoonplot(fifties_df[,heatmap_genes], fill = "value")+
+  scale_fill_viridis_c(option = "C")  +  # Apply the Viridis color scale
+  scale_y_discrete(labels = fifties_df$participant_id) + labs(title = "Gene Expression Amongst\nNon-ICU Participants Aged 50-59") 
+
+plot(balloon)
+ggsave("balloon_plot.pdf", plot = balloon, width = 8, height = 5)
+
+
 ```
 
