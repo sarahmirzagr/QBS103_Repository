@@ -68,7 +68,7 @@ histo <- ggplot(merged_matrix, aes(x = AAMP)) +
   labs(title = "AAMP Gene Expression",
        x = "AAMP Gene Expression",
        y = "Frequency") 
-plot(histo)
+#plot(histo)
 
 
 ```
@@ -89,7 +89,7 @@ scatter <- ggplot(merged_matrix, aes(x = age, y = AAMP,color = age)) + # color =
   labs(title = "AAMP Expression vs. Age",
        x = "Age",
        y = "AAMP Expression") 
-plot(scatter)
+#plot(scatter)
 
 # geom_smooth for best fit line
 
@@ -104,12 +104,12 @@ setwd("/Users/sarahmirza/Documents/GitHub/QBS103_Repository/")
 
 
 #a boxplot of AAMP expression separated by sex and ICU Status
-ggplot(merged_matrix, aes(x = icu_status, y = AAMP, fill = sex)) +
-  geom_boxplot() +
-  labs(title = "AAMP Expression by ICU Status and Sex",
-       x = "ICU Status",
-       y = "AAMP Expression",
-       fill = "sex")
+#ggplot(merged_matrix, aes(x = icu_status, y = AAMP, fill = sex)) +
+ # geom_boxplot() +
+#  labs(title = "AAMP Expression by ICU Status and Sex",
+#       x = "ICU Status",
+#       y = "AAMP Expression",
+ #      fill = "sex")
 
 
 
@@ -132,6 +132,8 @@ ggplot(merged_matrix, aes(x = icu_status, y = AAMP, fill = sex)) +
 #       y = "AAMP Expression",
 #       fill = "source_name_ch1") 
 ```
+
+
 ```{r}
 library(harrypotter)
 
@@ -173,9 +175,9 @@ fun_stats_pretty_plots <- function(matrix,gene_name,continuous_name,categorical1
 plot_genes = c("AAMP","AAK1","ABCA7")
 
 # for loop - replace gene name with gene in list
-for (g in plot_genes) {
-  fun_stats_pretty_plots(matrix = merged_matrix,gene_name=g,continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
-}
+#for (g in plot_genes) {
+#  fun_stats_pretty_plots(matrix = merged_matrix,gene_name=g,continuous_name = 'age',categorical1_name = #'icu_status',categorical2_name = 'sex')
+#}
 
 # gene 1
 #fun_stats_pretty_plots(matrix = merged_matrix,gene_name='AAMP',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
@@ -187,23 +189,6 @@ for (g in plot_genes) {
 
 # gene 3
 #fun_stats_pretty_plots(matrix = merged_matrix,gene_name='ABHD14A-ACY1',continuous_name = 'age',categorical1_name = 'icu_status',categorical2_name = 'sex')
-```
-```{r}
-# calculate mean 
-calcMean <- function(data) {
-  sumVal <- calcSum(data) # use the sum function created earlier
-  len <- length(data) # total
-  for (i in 1:length(data)) {
-    if(is.na(data[i])) {
-      len <- len - 1 # na entries should be removed from total
-    }
-  }
-  mean <- sumVal / len # sum / total
-  return(mean) # return mean
-}
-
-
-
 ```
 
 
@@ -219,18 +204,21 @@ library(knitr) # for base kable function
 #install.packages('tableone')
 library(tableone)
 
-merged_matrix$age <- as.numeric(merged_matrix$age)
+# set the continous variables to numeric
+merged_matrix$age <- as.numeric(merged_matrix$age) 
 merged_matrix$hospital.free_days_post_45_day_followup <- as.numeric(merged_matrix$hospital.free_days_post_45_day_followup)
 merged_matrix$ventilator.free_days <- as.numeric(merged_matrix$ventilator.free_days)
 
+# vars to be used in tableone
 vars <- c("icu_status","mechanical_ventilation","age","hospital.free_days_post_45_day_followup","ventilator.free_days")
 
 ## Create Table 1 stratified by sex
 tableOne <- CreateTableOne(vars = vars, strata ="sex", data = merged_matrix)
 
+# final table to be saved into CSV
 finished_table <- print(tableOne,showAllLevels = T,
                         nonnormal=c("hospital.free_days_post_45_day_followup","ventilator.free_days"))
-write.csv(finished_table,"tableOne.csv")
+write.csv(finished_table,"tableOne.csv") # save to csv
 
 ```
 Generate final a publication quality  histogram, scatter plot, and boxplot from submission 1 (i.e. only for your first gene of interest)  (5 pts)
@@ -310,17 +298,19 @@ row.names(merged_matrix) <- row.names(merged_matrix)
 library(pheatmap)
 
 
+# colors for annotating
 annotationColors <- list(ICU_Status = c(' yes' = 'lightpink1',' no' = 'cornflowerblue'),
                          Sex =c(' male' = 'midnightblue',' female' = 'mediumvioletred',' unknown'='purple4' ))
 
+# heatmap
 pheatmap(merged_matrix[,heatmap_genes],
   show_rownames = F,
   cluster_rows = T,
   cluster_cols = T,
-  color = colorRampPalette(c("blue", "white", "red"))(100),
+  color = colorRampPalette(c("blue", "white", "red"))(100), # color bar
   annotation_row = annotation,
-  annotation_colors = annotationColors,
-  filename = 'heatmap.pdf' )
+  annotation_colors = annotationColors) #,
+  #filename = 'heatmap.pdf' )
 
 
 
@@ -340,12 +330,13 @@ fifties_df <- subset(merged_matrix, age >= 50 & age <= 59 & icu_status == " no")
 
 #head(fifties_df)
 
+# balloon plot using the genes used in the heatmap 
 balloon <- ggballoonplot(fifties_df[,heatmap_genes], fill = "value")+
   scale_fill_viridis_c(option = "C")  +  # Apply the Viridis color scale
   scale_y_discrete(labels = fifties_df$participant_id) + labs(title = "Gene Expression Amongst\nNon-ICU Participants Aged 50-59") 
 
 plot(balloon)
-ggsave("balloon_plot.pdf", plot = balloon, width = 8, height = 5)
+ggsave("balloon_plot.pdf", plot = balloon, width = 8, height = 5) # save to a pdf
 
 
 ```
