@@ -140,7 +140,8 @@ library(harrypotter)
 # function to plot all three plots
 fun_stats_pretty_plots <- function(matrix,gene_name,continuous_name,categorical1_name,categorical2_name){
  # print(matrix)
-    matrix$gene <- matrix[,gene_name] # dummy variable that creates a new column with the name of the gene I want and all its values
+    matrix$gene <- matrix[,gene_name] # dummy variable that creates a new column with the name of the gene 
+    #I want and all its values
     # this is used for plotting, and the function is fed a string that I use for labeling which is the name of the original column
     #matrix$gene <- as.numeric(matrix$gene)
     matrix$continuous <- matrix[,continuous_name] # do the same for all variables so they are read in as strings but used as the column
